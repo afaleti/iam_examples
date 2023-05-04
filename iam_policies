@@ -1,0 +1,111 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyDeleteBackupVault",
+            "Effect": "Deny",
+            "Action": [
+                "backup:DeleteBackupVault",
+                "backup:DeleteBackupVaultAccessPolicy",
+                "backup:DeleteBackupVaultLockConfiguration"
+            ],
+            "Resource": "arn:aws:backup:<region>:<account-id>:backup-vault:<vault-name>"
+        }
+    ]
+}
+
+This policy denies the DeleteBackupVault, DeleteBackupVaultAccessPolicy, and DeleteBackupVaultLockConfiguration actions on the specified AWS Backup vault resource. This means that users or roles with this policy attached will be unable to delete the specified backup vault or modify its access policy or lock configuration.
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyDeleteProductionBackups",
+            "Effect": "Deny",
+            "Action": [
+                "backup:DeleteBackupSelection",
+                "backup:DeleteRecoveryPoint"
+            ],
+            "Resource": [
+                "arn:aws:backup:<region>:<account-id>:backup-plan:<backup-plan-id>",
+                "arn:aws:backup:<region>:<account-id>:recovery-point:<recovery-point-arn>"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "backup:ResourceTag/Environment": "Production"
+                }
+            }
+        }
+    ]
+}
+
+This policy denies the DeleteBackupVault, DeleteBackupVaultAccessPolicy, and DeleteBackupVaultLockConfiguration actions on the specified AWS Backup vault resource. This means that users or roles with this policy attached will be unable to delete the specified backup vault or modify its access policy or lock configuration.
+
+
+
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyDeleteTag",
+            "Effect": "Deny",
+            "Action": [
+                "ec2:DeleteTags",
+                "ec2:CreateTags"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:instance/*",
+                "arn:aws:ec2:*:*:volume/*",
+                "arn:aws:ec2:*:*:snapshot/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "ec2:ResourceTag/<tag-key>": "<tag-value>"
+                }
+            }
+        }
+    ]
+}
+
+
+Replace <tag-key> and <tag-value> with the key-value pair of the tag you want to protect from deletion.
+
+This policy denies the DeleteTags and CreateTags actions on EC2 instances, volumes, and snapshots with a specific tag. The Condition block limits the policy to only apply when the specified tag is present on the resource being acted upon.
+
+You can attach this policy to an AWS Organizations SCP to enforce it across multiple AWS accounts in your organization.
+
+
+
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyDeleteBackupTags",
+            "Effect": "Deny",
+            "Action": [
+                "backup:UntagResource"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringLike": {
+                    "aws:TagKeys": [
+                        "aws-backup:*"
+                    ]
+                }
+            }
+        }
+    ]
+}
+
+
+This policy denies the UntagResource action on all AWS Backup resources when the resource has any tag with a key that starts with aws-backup:.
+
+You can attach this policy to an AWS Organizations SCP to enforce it across multiple AWS accounts in your organization.
+
+Note: Keep in mind that if a backup vault is tagged with an aws-backup: tag, users and roles with this policy attached will not be able to remove the aws-backup: tag from the backup vault.
+
+
+
+
