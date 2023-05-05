@@ -1,0 +1,87 @@
+According to what we can read in the documentation (Vaults locked in governance mode can have the lock
+ removed by users with sufficient IAM permissions), I would like to create a user account that will have 
+ permissions to remove the lock while ensuring that none of the other administrator accounts have such permissions.
+
+How should I configure permissions on the privileged account and on the other administrator accounts?
+
+https://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html
+
+Short answer is to restrict which can "backup:DeleteBackupVaultLockConfiguration" https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsbackup.html#:~:text=DeleteBackupVaultLockConfiguration
+
+Probably want to layer an Organizational SCP with DENY with condition ArnNotEquals for the arn of the user who you allow to delete the vault lock.
+
+
+
+DeleteBackupSelection	Grants permission to delete a resource assignment from a backup plan	Write	
+backupPlan*
+
+DeleteBackupVault	Grants permission to delete a backup vault	Write	
+backupVault*
+
+DeleteBackupVaultAccessPolicy	Grants permission to delete backup vault access policy	Permissions management	
+backupVault*
+
+DeleteBackupVaultLockConfiguration Grants permission to remove the lock configuration from a backup vault	Write	
+backupVault*
+
+DeleteBackupVaultNotifications	Grants permission to remove the notifications from a backup vault	Write	
+backupVault*
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyDeleteBackupVault",
+            "Effect": "Deny",
+            "Action": [
+                "backup:DeleteBackupVault",
+                "backup:DeleteBackupVaultAccessPolicy",
+                "backup:DeleteBackupVaultLockConfiguration"
+            ],
+            "Resource": "arn:aws:backup:<region>:<account-id>:backup-vault:<vault-name>"
+        }
+    ]
+}
+
+Make sure to replace <region>, <account-id>, and <vault-name> with the appropriate values for your AWS environment.
+
+This policy denies the DeleteBackupVault, DeleteBackupVaultAccessPolicy, and DeleteBackupVaultLockConfiguration actions
+ on the specified AWS Backup vault resource. This means that users or roles with this policy attached will be unable to 
+ delete the specified backup vault or modify its access policy or lock configuration.
+
+
+================================================================================================================
+
+How do I prevent an IAM role from deleting production database backups in AWS Backup
+
+To prevent an IAM role from deleting production database backups in AWS Backup, you can use an IAM policy that explicitly denies the backup:DeleteBackupSelection and backup:DeleteRecoveryPoint actions for the specific resources associated with your production database backup.
+
+Here's an example IAM policy that you can customize with the appropriate values for your environment:
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyDeleteProductionBackups",
+            "Effect": "Deny",
+            "Action": [
+                "backup:DeleteBackupSelection",
+                "backup:DeleteRecoveryPoint"
+            ],
+            "Resource": [
+                "arn:aws:backup:<region>:<account-id>:backup-plan:<backup-plan-id>",
+                "arn:aws:backup:<region>:<account-id>:recovery-point:<recovery-point-arn>"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "backup:ResourceTag/Environment": "Production"
+                }
+            }
+        }
+    ]
+}
+
+In this policy, the Deny effect is applied to the backup:DeleteBackupSelection and backup:DeleteRecoveryPoint actions on the resources associated with your production database backup. The Resource field specifies the ARN of the backup plan and the ARN of the recovery point. The Condition field applies the policy only to resources with the Environment tag set to Production.
+
+By attaching this policy to the IAM role associated with your backup users or processes, you can prevent accidental or malicious deletion of your production database backups.
+
