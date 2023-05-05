@@ -1,0 +1,61 @@
+
+To prevent the deletion of an 
+AWS RDS database with a specific tag, you can use the following IAM policy:
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyDeleteRDSDatabaseWithTag",
+            "Effect": "Deny",
+            "Action": [
+                "rds:DeleteDBInstance",
+                "rds:DeleteDBSnapshot"
+            ],
+            "Resource": [
+                "arn:aws:rds:<region>:<account-id>:db:<db-name>",
+                "arn:aws:rds:<region>:<account-id>:snapshot:<snapshot-name>"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "rds:db-tag/<tag-key>": "<tag-value>"
+                }
+            }
+        }
+    ]
+}
+
+
+Replace <region>, <account-id>, <db-name>, <snapshot-name>, <tag-key>, and <tag-value> with the appropriate values for your AWS environment.
+
+This policy denies the DeleteDBInstance and DeleteDBSnapshot actions on the specified AWS RDS database and snapshot resources. This means that users or 
+roles with this policy attached will be unable to delete the specified RDS database or snapshot if it has a tag with the specified key-value pair.
+
+You can attach this policy to the IAM roles or users who should not have permission to delete RDS databases with the specified tag.
+
+
+o prevent the deletion of AWS RDS tags, you can use the following IAM policy:
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyDeleteRDSTags",
+            "Effect": "Deny",
+            "Action": "rds:RemoveTagsFromResource",
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "rds:db-tag/<tag-key>": "<tag-value>"
+                }
+            }
+        }
+    ]
+}
+
+
+Replace <tag-key> and <tag-value> with the key-value pair of the tag you want to protect from deletion.
+
+This policy denies the RemoveTagsFromResource action on all AWS RDS resources when the resource has a tag with the specified key-value pair. This means that users or roles with this policy attached will be unable to remove the specified tag from any RDS resource that has it.
+
+You can attach this policy to the IAM roles or users who should not have permission to remove tags from AWS RDS resources.
