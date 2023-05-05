@@ -6,6 +6,8 @@ How should I configure permissions on the privileged account and on the other ad
 
 https://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html
 
+https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsbackup.html
+
 Short answer is to restrict which can "backup:DeleteBackupVaultLockConfiguration" https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsbackup.html#:~:text=DeleteBackupVaultLockConfiguration
 
 Probably want to layer an Organizational SCP with DENY with condition ArnNotEquals for the arn of the user who you allow to delete the vault lock.
